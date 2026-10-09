@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "StateTreeExecutionContext.h"
+#include "Navigation/PathFollowingComponent.h"
 
 
 EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
@@ -13,16 +14,26 @@ EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& 
 	AAIController* AIController = Cast<AAIController>(Context.GetOwner());
 	if (!AIController)
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHASE: AIController is NULL"));
 		return EStateTreeRunStatus::Failed;
 	}
 	
 	if (!Data.Player)
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHASE: Data.Player is NULL. Check the State Tree binding."));
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	//Move AI to the Player
-	AIController->MoveToActor(Data.Player, Data.AcceptanceRadius);
+	UE_LOG(LogTemp, Warning, TEXT("CHASE: Targeting player %s"), *Data.Player->GetName());
+	
+	const EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Data.Player, Data.AcceptanceRadius);
+	UE_LOG(LogTemp, Warning, TEXT("CHASE: MoveToActor result = %d"), static_cast<int32>(Result));
+	
+	if (Result == EPathFollowingRequestResult::Failed)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CHASE: Movement request failed"));
+		return EStateTreeRunStatus::Failed;
+	}
 	
 	return EStateTreeRunStatus::Running;
 }
@@ -30,29 +41,20 @@ EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& 
 EStateTreeRunStatus FSTTask_ChasePlayer::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
 {
 	FSTTask_ChasePlayerInstanceData& Data = Context.GetInstanceData(*this);
-	AAIController* AIController = Cast<AAIController>(Context.GetOwner());
-	if (!AIController)
-	{
-		return EStateTreeRunStatus::Failed;
-	}
 	
 	if (!Data.Player)
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHASE: Player became NULL"));
 		return EStateTreeRunStatus::Failed;
 	}
-	
-	AIController->MoveToActor(Data.Player, Data.AcceptanceRadius);
 	
 	return EStateTreeRunStatus::Running;
 }
 
 void FSTTask_ChasePlayer::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
-	AAIController* AIController = Cast<AAIController>(Context.GetOwner());
-	if (AIController)
+	if (AAIController* AIController = Cast<AAIController>(Context.GetOwner()))
 	{
 		AIController->StopMovement();
 	}
-	
-	//return EStateTreeRunStatus::Succeeded;
 }

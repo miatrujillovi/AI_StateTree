@@ -6,6 +6,30 @@
 #include "GameFramework/Character.h"
 #include "AIAgentCharacter.generated.h"
 
+USTRUCT(BlueprintType)
+struct FPatrolPoints
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget))
+	FVector Location;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WaitDuration = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FProperties
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FPatrolPoints> PatrolPoints;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int CurrentPatrolPointIndex = 0;
+};
+
 UCLASS()
 class IA_STATETREE_API AAIAgentCharacter : public ACharacter
 {
@@ -17,13 +41,16 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	FProperties PatrolPoints;
+	
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	TObjectPtr<AActor> PatrolPointA;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	TObjectPtr<AActor> PatrolPointB;
+	TObjectPtr<AActor> PatrolPointB;*/
 
 public:	
-	AActor* GetPatrolPointA() const
+	/*AActor* GetPatrolPointA() const
 	{
 		return PatrolPointA;
 	}
@@ -31,6 +58,6 @@ public:
 	AActor* GetPatrolPointB() const
 	{
 		return PatrolPointB;
-	}
+	}*/
 
 };
