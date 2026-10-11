@@ -12,7 +12,7 @@ struct IA_STATETREE_API FSTTask_PatrolInstanceData
 	GENERATED_BODY()
 	
 	//Contexto del AI Agent Character
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	TObjectPtr<AAIAgentCharacter> ActorContext = nullptr;
 	
 	//Output de destino de la IA
@@ -21,13 +21,13 @@ struct IA_STATETREE_API FSTTask_PatrolInstanceData
 	
 	//Estado interno para que el StateTree recuerde por donde va
 	UPROPERTY()
-	int32 CurrentIndex = 0;
+	int32 CurrentIndex = 0;*/
 	
-	/*UPROPERTY(EditAnywhere, Category = "Patrol")
+	UPROPERTY(EditAnywhere, Category = "Patrol")
 	TObjectPtr<AActor> PatrolPointA;
 
 	UPROPERTY(EditAnywhere, Category = "Patrol")
-	TObjectPtr<AActor> PatrolPointB;*/
+	TObjectPtr<AActor> PatrolPointB;
 
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	float AcceptanceRadius = 100.f;
@@ -36,7 +36,7 @@ struct IA_STATETREE_API FSTTask_PatrolInstanceData
 	bool bGoingToA = true;
 };
 
-USTRUCT(meta = (DisplayName = "Get Patrolling Points"))
+/*USTRUCT(meta = (DisplayName = "Get Patrolling Points"))
 struct IA_STATETREE_API FSTTask_PatrolPoints : public FStateTreeTaskBase
 {
 	GENERATED_BODY()
@@ -45,7 +45,7 @@ struct IA_STATETREE_API FSTTask_PatrolPoints : public FStateTreeTaskBase
 	virtual const UStruct* GetInstanceDataType() const override { return FInstanceDataType::StaticStruct();}
 
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
-};
+};*/
 
 USTRUCT(BlueprintType, meta = (DisplayName = "Patrol", Category = "AI"))
 struct IA_STATETREE_API FSTTask_Patrol : public FStateTreeAITaskBase

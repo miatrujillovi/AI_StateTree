@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "StateTreeExecutionContext.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "AI/AIAgentController.h"
 
 
 EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
@@ -18,15 +19,18 @@ EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& 
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	if (!Data.Player)
+	AActor* Player = AIController->GetPawn();
+	if (!Player)
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHASE: Data.Player is NULL. Check the State Tree binding."));
+		UE_LOG(LogTemp, Error,
+			TEXT("CHASE: Controller has no player reference"));
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("CHASE: Targeting player %s"), *Data.Player->GetName());
 	
-	const EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Data.Player, Data.AcceptanceRadius);
+	UE_LOG(LogTemp, Warning, TEXT("CHASE: Targeting player %s"), *Player->GetName());
+	
+	const EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Player, Data.AcceptanceRadius);
 	UE_LOG(LogTemp, Warning, TEXT("CHASE: MoveToActor result = %d"), static_cast<int32>(Result));
 	
 	if (Result == EPathFollowingRequestResult::Failed)
@@ -41,10 +45,19 @@ EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& 
 EStateTreeRunStatus FSTTask_ChasePlayer::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
 {
 	FSTTask_ChasePlayerInstanceData& Data = Context.GetInstanceData(*this);
-	
-	if (!Data.Player)
+
+	AAIController* AIController = Cast<AAIController>(Context.GetOwner());
+	if (!AIController)
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHASE: Player became NULL"));
+		UE_LOG(LogTemp, Error, TEXT("CHASE: AIController is NULL"));
+		return EStateTreeRunStatus::Failed;
+	}
+	
+	AActor* Player = AIController->GetPawn();
+	if (!Player)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("CHASE: Controller has no player reference"));
 		return EStateTreeRunStatus::Failed;
 	}
 	

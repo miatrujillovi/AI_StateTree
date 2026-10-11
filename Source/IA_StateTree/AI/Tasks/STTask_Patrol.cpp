@@ -18,16 +18,34 @@ EStateTreeRunStatus FSTTask_Patrol::EnterState(FStateTreeExecutionContext& Conte
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	/*UE_LOG(LogTemp, Warning, TEXT("PATROL: Moving toward %s"), *Target->GetName());
+	AAIAgentCharacter* AICharacter = Cast<AAIAgentCharacter>(AIController->GetPawn());
+	if (!AICharacter)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PATROL: Could not get AI character"));
+		return EStateTreeRunStatus::Failed;
+	}
+	
+	/*if (!Data.PatrolPointA || !Data.PatrolPointB)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PATROL: Missing patrol points. A=%s, B=%s"), *GetNameSafe(Data.PatrolPointA), *GetNameSafe(Data.PatrolPointB));
+		return EStateTreeRunStatus::Failed;
+	}*/
+	
+	AActor* Target = Data.bGoingToA ? AICharacter->PatrolPointA : AICharacter->PatrolPointB;
+	if (!Target)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PATROL: Character patrol points are not assigned"));
+		return EStateTreeRunStatus::Failed;
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("PATROL: Moving toward %s"), *Target->GetName());
 	
 	const EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Target, Data.AcceptanceRadius);
-	UE_LOG(LogTemp, Warning, TEXT("PATROL: MoveToActor result = %d"), static_cast<int32>(Result));
-	
 	if (Result == EPathFollowingRequestResult::Failed)
 	{
 		UE_LOG(LogTemp, Error, TEXT("PATROL: Movement request failed"));
 		return EStateTreeRunStatus::Failed;
-	}*/
+	}
 	
 	return EStateTreeRunStatus::Running;
 }
@@ -42,6 +60,13 @@ EStateTreeRunStatus FSTTask_Patrol::Tick(FStateTreeExecutionContext& Context, co
 		return EStateTreeRunStatus::Failed;
 	}
 	
+	AAIAgentCharacter* AICharacter = Cast<AAIAgentCharacter>(AIController->GetPawn());
+	if (!AICharacter)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PATROL: Could not get AI character"));
+		return EStateTreeRunStatus::Failed;
+	}
+	
 	APawn* Pawn = AIController->GetPawn();
 	if (!Pawn)
 	{
@@ -49,10 +74,10 @@ EStateTreeRunStatus FSTTask_Patrol::Tick(FStateTreeExecutionContext& Context, co
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	AActor* Target = Data.bGoingToA ? Data.PatrolPointA : Data.PatrolPointB;
+	AActor* Target = Data.bGoingToA ? AICharacter->PatrolPointA : AICharacter->PatrolPointB;
 	if (!Target)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PATROL: Current target is NULL"));
+		UE_LOG(LogTemp, Error, TEXT("PATROL: Character patrol points are not assigned"));
 		return EStateTreeRunStatus::Failed;
 	}
 	
@@ -61,18 +86,19 @@ EStateTreeRunStatus FSTTask_Patrol::Tick(FStateTreeExecutionContext& Context, co
 	{
 		Data.bGoingToA = !Data.bGoingToA;
 
-		Target = Data.bGoingToA ? Data.PatrolPointA : Data.PatrolPointB;
+		Target = Data.bGoingToA ? AICharacter->PatrolPointA : AICharacter->PatrolPointB;
 		
 		if (!Target)
-		{ return EStateTreeRunStatus::Failed; }
+		{
+			return EStateTreeRunStatus::Failed;
+		}
 		
 		UE_LOG(LogTemp, Warning, TEXT("PATROL: Reached point. Next target: %s"), *Target->GetName());
 		
 		const EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Target, Data.AcceptanceRadius);
-		UE_LOG(LogTemp, Warning, TEXT("PATROL: Next movement result = %d"), static_cast<int32>(Result));
-		
 		if (Result == EPathFollowingRequestResult::Failed)
 		{
+			UE_LOG(LogTemp, Error, TEXT("PATROL: Movement request failed"));
 			return EStateTreeRunStatus::Failed;
 		}
 	}

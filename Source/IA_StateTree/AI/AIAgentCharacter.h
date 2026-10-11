@@ -18,7 +18,7 @@ struct FPatrolPoints
 	float WaitDuration = 0.0f;
 };
 
-USTRUCT(BlueprintType)
+/*USTRUCT(BlueprintType)
 struct FProperties
 {
 	GENERATED_BODY()
@@ -28,7 +28,7 @@ struct FProperties
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int CurrentPatrolPointIndex = 0;
-};
+};*/
 
 UCLASS()
 class IA_STATETREE_API AAIAgentCharacter : public ACharacter
@@ -38,19 +38,19 @@ class IA_STATETREE_API AAIAgentCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AAIAgentCharacter();
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	FProperties PatrolPoints;
 	
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "AI")
 	TObjectPtr<AActor> PatrolPointA;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	TObjectPtr<AActor> PatrolPointB;*/
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "AI")
+	TObjectPtr<AActor> PatrolPointB;
+
+protected:
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	FProperties PatrolPoints;*/
 
 public:	
-	/*AActor* GetPatrolPointA() const
+	AActor* GetPatrolPointA() const
 	{
 		return PatrolPointA;
 	}
@@ -58,6 +58,6 @@ public:
 	AActor* GetPatrolPointB() const
 	{
 		return PatrolPointB;
-	}*/
+	}
 
 };
