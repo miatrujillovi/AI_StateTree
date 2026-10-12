@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "StateTreeExecutionContext.h"
+#include "AI/AIAgentController.h"
 
 void FSTE_CheckPlayerDistance::TreeStart(FStateTreeExecutionContext& Context) const
 {
@@ -17,17 +18,16 @@ void FSTE_CheckPlayerDistance::Tick(FStateTreeExecutionContext& Context, const f
 {
 	FSTE_CheckPlayerDistanceInstanceData& Data = Context.GetInstanceData(*this);
 	
-	if (!Data.Player)
-	{
-		Data.DistanceToPlayer = -1.f;
-		return;
-	}
-	
-	AAIController* AIController = Cast<AAIController>(Context.GetOwner());
+	AAIAgentController* AIController = Cast<AAIAgentController>(Context.GetOwner());
 	if (!AIController)
 	{
-		Data.DistanceToPlayer = -1.f;
-		return;
+		UE_LOG(LogTemp, Error, TEXT("CHECK PLAYER DISTANCE: AIController is NULL"));
+	}
+	
+	AActor* Player = AIController->GetPlayer();
+	if (!Player)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CHECK PLAYER DISTANCE: Controller has no player reference"));
 	}
 	
 	APawn* Pawn = AIController->GetPawn();
@@ -37,7 +37,8 @@ void FSTE_CheckPlayerDistance::Tick(FStateTreeExecutionContext& Context, const f
 		return;
 	}
 	
-	Data.DistanceToPlayer = FVector::Dist(Pawn->GetActorLocation(), Data.Player->GetActorLocation());
+	Data.DistanceToPlayer = FVector::Dist(Pawn->GetActorLocation(), Player->GetActorLocation());
+	UE_LOG(LogTemp, Warning, TEXT("DISTANCE CHECK: Player=%s | Distance=%.2f"), *GetNameSafe(Data.Player), Data.DistanceToPlayer);
 }
 
 void FSTE_CheckPlayerDistance::TreeStop(FStateTreeExecutionContext& Context) const

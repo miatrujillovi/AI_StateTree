@@ -110,6 +110,7 @@ void FSTTask_Patrol::ExitState(FStateTreeExecutionContext& Context, const FState
 {
 	if (AAIController* AIController = Cast<AAIController>(Context.GetOwner()))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("TASK EXIT: %s"), *GetNameSafe(AIController));
 		AIController->StopMovement();
 	}
 }
