@@ -38,7 +38,7 @@ void FSTE_CheckPlayerDistance::Tick(FStateTreeExecutionContext& Context, const f
 	}
 	
 	Data.DistanceToPlayer = FVector::Dist(Pawn->GetActorLocation(), Player->GetActorLocation());
-	UE_LOG(LogTemp, Warning, TEXT("DISTANCE CHECK: Player=%s | Distance=%.2f"), *GetNameSafe(Data.Player), Data.DistanceToPlayer);
+	//UE_LOG(LogTemp, Warning, TEXT("DISTANCE CHECK: Player=%s | Distance=%.2f"), *GetNameSafe(Data.Player), Data.DistanceToPlayer);
 }
 
 void FSTE_CheckPlayerDistance::TreeStop(FStateTreeExecutionContext& Context) const

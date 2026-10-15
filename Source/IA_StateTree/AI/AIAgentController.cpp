@@ -5,6 +5,9 @@
 #include "Components/StateTreeAIComponent.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISense_Sight.h"
 
 AAIAgentController::AAIAgentController()
 {
@@ -12,6 +15,54 @@ AAIAgentController::AAIAgentController()
 	
 	// We want to provide the parameters before the tree starts.
 	StateTreeComponent->SetStartLogicAutomatically(false);
+	
+	//Configure AI Perception - Sight Perception
+	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
+	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
+	
+	SightConfig->SightRadius = 1500.f; //Maximum detection range
+	SightConfig->LoseSightRadius = 1800.f; //Larger range for retaining an existing target
+	SightConfig->PeripheralVisionAngleDegrees = 60.f; //Field of View FOV
+	
+	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
+	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
+	
+	SightConfig->SetMaxAge(3.f);
+	
+	AIPerceptionComponent->ConfigureSense(*SightConfig);
+	AIPerceptionComponent->SetDominantSense(UAISense_Sight::StaticClass());
+}
+
+void AAIAgentController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
+{
+	//Only react to the player.
+	if (!Actor || Actor != Player)
+	{
+		return;
+	}
+	
+	const bool bNewCanSeePlayer = Stimulus.WasSuccessfullySensed();
+	
+	//Ignore repeated notifications that don't change visibility.
+	if (bCanSeePlayer == bNewCanSeePlayer)
+	{
+		return;
+	}
+	
+	bCanSeePlayer = bNewCanSeePlayer;
+	
+	UE_LOG(LogTemp, Warning, TEXT("PLAYER SIGHT CHANGED: %s"), bCanSeePlayer ? TEXT("VISIBLE") : TEXT("NOT VISIBLE"));
+}
+
+void AAIAgentController::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (AIPerceptionComponent)
+	{
+		AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AAIAgentController::OnTargetPerceptionUpdated);
+	}
 }
 
 void AAIAgentController::OnPossess(APawn* InPawn)
