@@ -3,7 +3,6 @@
 
 #include "AI/Tasks/STTask_Attack.h"
 
-#include "AIController.h"
 #include "StateTreeExecutionContext.h"
 
 
@@ -32,5 +31,5 @@ EStateTreeRunStatus FSTTask_Attack::Tick(FStateTreeExecutionContext& Context, co
 
 void FSTTask_Attack::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
-	//return EStateTreeRunStatus::Succeeded;
+	
 }

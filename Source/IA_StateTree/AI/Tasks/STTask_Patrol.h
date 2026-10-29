@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Tasks/StateTreeAITask.h"
+#include "AI/AIAgentCharacter.h"
+#include "AI/AIAgentController.h"
 #include "STTask_Patrol.generated.h"
 
 USTRUCT(BlueprintType)
@@ -31,6 +33,12 @@ struct IA_STATETREE_API FSTTask_PatrolInstanceData
 
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	float AcceptanceRadius = 100.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	AAIAgentController* AIController = nullptr;
+	
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	AAIAgentCharacter* AICharacter = nullptr;
 	
 	UPROPERTY()
 	bool bGoingToA = true;

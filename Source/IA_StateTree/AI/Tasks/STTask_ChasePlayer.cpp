@@ -7,6 +7,7 @@
 #include "StateTreeExecutionContext.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AI/AIAgentController.h"
+#include "AI/AIAgentCharacter.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -14,14 +15,24 @@
 EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
 	FSTTask_ChasePlayerInstanceData& Data = Context.GetInstanceData(*this);
-	AAIAgentController* AIController = Cast<AAIAgentController>(Context.GetOwner());
-	if (!AIController)
+	
+	//Initialize references once when entering Chase Player-------------------------------
+	Data.AIController = Cast<AAIAgentController>(Context.GetOwner());
+	if (!Data.AIController)
 	{
 		UE_LOG(LogTemp, Error, TEXT("CHASE: AIController is NULL"));
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	AActor* Player = AIController->GetPlayer();
+	Data.AICharacter = Cast<AAIAgentCharacter>(Data.AIController->GetPawn());
+	if (Data.AICharacter)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CHASE: AICharacter is NULL"));
+		return EStateTreeRunStatus::Failed;
+	}
+	//Finalize assigning references ------------------------------------------------------
+	
+	AActor* Player = Data.AIController->GetPlayer();
 	if (!Player)
 	{
 		UE_LOG(LogTemp, Error,
@@ -29,23 +40,19 @@ EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& 
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	
 	UE_LOG(LogTemp, Warning, TEXT("CHASE: Targeting player %s"), *Player->GetName());
 	
-	const EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Player, Data.AcceptanceRadius);
+	const EPathFollowingRequestResult::Type Result = Data.AIController->MoveToActor(Player, Data.AcceptanceRadius);
 	UE_LOG(LogTemp, Warning, TEXT("CHASE: MoveToActor result = %d"), static_cast<int32>(Result));
 	
-	//Testing
-	ACharacter* Character = Cast<ACharacter>(AIController->GetPawn());
-	if (Character)
+	if (Data.AICharacter)
 	{
-		UCharacterMovementComponent* Movement =
-			Character->GetCharacterMovement();
+		UCharacterMovementComponent* Movement = Data.AICharacter->GetCharacterMovement();
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("AI DIAGNOSTICS: Location=%s | Velocity=%s | MovementMode=%d | MaxWalkSpeed=%.1f"),
-			*Character->GetActorLocation().ToString(),
-			*Character->GetVelocity().ToString(),
+			*Data.AICharacter->GetActorLocation().ToString(),
+			*Data.AICharacter->GetVelocity().ToString(),
 			Movement ? static_cast<int32>(Movement->MovementMode) : -1,
 			Movement ? Movement->MaxWalkSpeed : -1.f);
 	}
@@ -62,19 +69,11 @@ EStateTreeRunStatus FSTTask_ChasePlayer::EnterState(FStateTreeExecutionContext& 
 EStateTreeRunStatus FSTTask_ChasePlayer::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
 {
 	FSTTask_ChasePlayerInstanceData& Data = Context.GetInstanceData(*this);
-
-	AAIAgentController* AIController = Cast<AAIAgentController>(Context.GetOwner());
-	if (!AIController)
-	{
-		UE_LOG(LogTemp, Error, TEXT("CHASE: AIController is NULL"));
-		return EStateTreeRunStatus::Failed;
-	}
 	
-	AActor* Player = AIController->GetPlayer();
+	AActor* Player = Data.AIController->GetPlayer();
 	if (!Player)
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("CHASE: Controller has no player reference"));
+		UE_LOG(LogTemp, Error, TEXT("CHASE: Controller has no player reference"));
 		return EStateTreeRunStatus::Failed;
 	}
 	
@@ -83,9 +82,11 @@ EStateTreeRunStatus FSTTask_ChasePlayer::Tick(FStateTreeExecutionContext& Contex
 
 void FSTTask_ChasePlayer::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
-	if (AAIController* AIController = Cast<AAIController>(Context.GetOwner()))
+	FSTTask_ChasePlayerInstanceData& Data = Context.GetInstanceData(*this);
+	
+	if (Data.AIController)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("TASK EXIT: %s"), *GetNameSafe(AIController));
-		AIController->StopMovement();
+		UE_LOG(LogTemp, Warning, TEXT("TASK EXIT: %s"), *GetNameSafe(Data.AIController));
+		Data.AIController->StopMovement();
 	}
 }

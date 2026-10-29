@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "StateTreeTaskBase.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
+#include "AI/AIAgentController.h"
 #include "STTask_TacticalPosition.generated.h"
 
 class UEnvQuery;
@@ -29,6 +30,9 @@ struct IA_STATETREE_API FSTTask_TacticalPositionInstanceData
 
 	UPROPERTY()
 	bool bHasTargetLocation = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Tactical")
+	AAIAgentController* AIController = nullptr;
 };
 
 USTRUCT(meta = (DisplayName = "Find Tactical Position"))

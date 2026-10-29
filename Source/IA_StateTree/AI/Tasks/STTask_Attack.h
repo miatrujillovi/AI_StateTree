@@ -11,9 +11,10 @@ struct IA_STATETREE_API FSTTask_AttackInstanceData
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	float AttackDuration = 2.f;
 
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	float ElapsedTime = 0.f;
 };
 

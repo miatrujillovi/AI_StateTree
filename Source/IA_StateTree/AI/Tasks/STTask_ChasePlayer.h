@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Tasks/StateTreeAITask.h"
+#include "AI/AIAgentCharacter.h"
+#include "AI/AIAgentController.h"
 #include "STTask_ChasePlayer.generated.h"
 
 USTRUCT(BlueprintType)
@@ -16,6 +18,12 @@ struct IA_STATETREE_API FSTTask_ChasePlayerInstanceData
 
 	UPROPERTY(EditAnywhere, Category = "Chase")
 	float AcceptanceRadius = 150.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Chase")
+	AAIAgentController* AIController = nullptr;
+	
+	UPROPERTY(EditAnywhere, Category = "Chase")
+	AAIAgentCharacter* AICharacter = nullptr;
 };
 
 USTRUCT(BlueprintType, meta = (DisplayName = "Chase Player", Category = "AI"))

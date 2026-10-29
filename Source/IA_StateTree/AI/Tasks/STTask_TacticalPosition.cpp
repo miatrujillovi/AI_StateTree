@@ -18,12 +18,14 @@ EStateTreeRunStatus FSTTask_TacticalPosition::EnterState(FStateTreeExecutionCont
 {
 	FInstanceDataType& Data = Context.GetInstanceData(*this);
 	
-	AAIAgentController* AIController = Cast<AAIAgentController>(Context.GetOwner());
-	if (!AIController)
+	//Initialize references once when entering Tactical Position--------------------------
+	Data.AIController = Cast<AAIAgentController>(Context.GetOwner());
+	if (!Data.AIController)
 	{
 		UE_LOG(LogTemp, Error, TEXT("TACTICAL: AIController is NULL"));
 		return EStateTreeRunStatus::Failed;
 	}
+	//Finalize assigning references ------------------------------------------------------
 	
 	if (!Data.TacticalQuery)
 	{
@@ -31,7 +33,7 @@ EStateTreeRunStatus FSTTask_TacticalPosition::EnterState(FStateTreeExecutionCont
 		return EStateTreeRunStatus::Failed;
 	}
 	
-	if (!AIController->GetPawn())
+	if (!Data.AIController->GetPawn())
 	{
 		UE_LOG(LogTemp, Error, TEXT("TACTICAL: Controller has no possessed pawn"));
 		return EStateTreeRunStatus::Failed;
@@ -40,9 +42,9 @@ EStateTreeRunStatus FSTTask_TacticalPosition::EnterState(FStateTreeExecutionCont
 	Data.bHasTargetLocation = false;
 	Data.QueryInstance = nullptr;
 	
-	AIController->StopMovement();
+	Data.AIController->StopMovement();
 	
-	Data.QueryInstance = UEnvQueryManager::RunEQSQuery(AIController, Data.TacticalQuery, AIController,
+	Data.QueryInstance = UEnvQueryManager::RunEQSQuery(Data.AIController, Data.TacticalQuery, Data.AIController,
 											EEnvQueryRunMode::SingleResult,
 											UEnvQueryInstanceBlueprintWrapper::StaticClass());
 	
@@ -61,14 +63,7 @@ EStateTreeRunStatus FSTTask_TacticalPosition::Tick(FStateTreeExecutionContext& C
 {
 	FInstanceDataType& Data = Context.GetInstanceData(*this);
 	
-	AAIAgentController* AIController = Cast<AAIAgentController>(Context.GetOwner());
-	if (!AIController || !AIController->GetPawn())
-	{
-		UE_LOG(LogTemp, Error, TEXT("TACTICAL: AIController is NULL"));
-		return EStateTreeRunStatus::Failed;
-	}
-	
-	APawn* AIPawn = AIController->GetPawn();
+	APawn* AIPawn = Data.AIController->GetPawn();
 	if (!AIPawn)
 	{
 		UE_LOG(LogTemp, Error, TEXT("TACTICAL: Controller has no possessed pawn"));
@@ -113,7 +108,7 @@ EStateTreeRunStatus FSTTask_TacticalPosition::Tick(FStateTreeExecutionContext& C
 		UE_LOG(LogTemp, Warning, TEXT("TACTICAL: Selected position: %s"), *Data.TargetLocation.ToString());
 		
 		// Stage 2: Request movement to the selected position.
-		const EPathFollowingRequestResult::Type MoveResult = AIController->MoveToLocation(Data.TargetLocation, Data.AcceptanceRadius, true);
+		const EPathFollowingRequestResult::Type MoveResult = Data.AIController->MoveToLocation(Data.TargetLocation, Data.AcceptanceRadius, true);
 
 		if (MoveResult == EPathFollowingRequestResult::Failed)
 		{
@@ -131,7 +126,7 @@ EStateTreeRunStatus FSTTask_TacticalPosition::Tick(FStateTreeExecutionContext& C
 	}
 	
 	// Stage 3: Wait until movement completes.
-	const float Distance = FVector::Dist(AIController->GetPawn()->GetActorLocation(), Data.TargetLocation);
+	const float Distance = FVector::Dist(Data.AIController->GetPawn()->GetActorLocation(), Data.TargetLocation);
 
 	if (Distance <= Data.AcceptanceRadius)
 	{
@@ -139,7 +134,7 @@ EStateTreeRunStatus FSTTask_TacticalPosition::Tick(FStateTreeExecutionContext& C
 		return EStateTreeRunStatus::Succeeded;
 	}
 
-	UPathFollowingComponent* PathFollowing = AIController->GetPathFollowingComponent();
+	UPathFollowingComponent* PathFollowing = Data.AIController->GetPathFollowingComponent();
 	if (PathFollowing && PathFollowing->GetStatus() == EPathFollowingStatus::Idle)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("TACTICAL: Movement stopped before reaching target. " "Distance remaining: %.1f"), Distance);
@@ -151,15 +146,14 @@ EStateTreeRunStatus FSTTask_TacticalPosition::Tick(FStateTreeExecutionContext& C
 
 void FSTTask_TacticalPosition::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
+	FInstanceDataType& Data = Context.GetInstanceData(*this);
+	
 	UE_LOG(LogTemp, Warning, TEXT("TACTICAL: EXITED"));
 	
-	AAIAgentController* AIController = Cast<AAIAgentController>(Context.GetOwner());
-	if (AIController)
+	if (Data.AIController)
 	{
-		AIController->StopMovement();
+		Data.AIController->StopMovement();
 	}
-	
-	FInstanceDataType& Data = Context.GetInstanceData(*this);
 
 	Data.QueryInstance = nullptr;
 	Data.bHasTargetLocation = false;
